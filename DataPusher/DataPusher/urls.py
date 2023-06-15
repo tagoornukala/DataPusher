@@ -18,11 +18,12 @@ from django.urls import path
 from datapusher_app.views import *
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('account/',account_list),
-    path('account/<int:account_id>/',account_details),
+    path('accounts/',account_list),
+    path('accounts/<int:account_id>/',account_details),
     path('destination/',destination_list),
     path('destination/<str:id>/',destination_details),
-    path('account/<int:account_id>/destinations/',account_destinations)
+    path('accounts/<int:account_id>/destinations/',account_destinations),
+    path('server/incoming_data/',incoming_data),
 
 
 ]

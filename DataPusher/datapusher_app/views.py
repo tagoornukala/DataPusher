@@ -4,7 +4,8 @@ from .serializer import *
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+import requests
 # Create your views here.
 @api_view(['GET','POST'])
 def account_list(request):
@@ -113,3 +114,31 @@ def account_destinations(request, account_id):
     serializer = DestinationSerializer(destinations, many=True)
     return Response(serializer.data)
 
+
+@api_view(['POST'])
+def incoming_data(request):
+    if request.method == 'POST':
+        app_secret_token = request.headers.get('CL-X-TOKEN')
+        if not app_secret_token:
+            return Response({'error':'Unauthenticated'},status=status.HTTP_401_UNAUTHORIZED)
+        
+        data = request.data
+        if not isinstance(data,dict):
+            return Response({'error':"Inavalid Data"},status=status.HTTP_400_BAD_REQUEST)
+        
+        account = get_object_or_404(Account,app_secret_token=app_secret_token)
+        destinations = Destination.objects.filter(account=account)
+
+        for destination in destinations:
+            url = destination.url
+            http_method = destination.http_method
+            headers = destination.headers
+
+            if http_method == 'GET':
+                params = {'data':data}
+                response = request.get(url,params=params,headers = headers)
+            else:
+                response = requests.request(http_method,url,json=data,headers=headers)
+
+            return response(status=status.HTTP_200_OK)
+        
